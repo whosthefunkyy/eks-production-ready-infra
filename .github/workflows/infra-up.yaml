@@ -1,0 +1,43 @@
+name: "Infrastructure UP"
+
+
+on:
+  workflow_dispatch:
+
+
+permissions:
+  id-token: write
+  contents: read
+
+jobs:
+  terraform-apply:
+    runs-on: ubuntu-latest
+    steps:
+      
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+     
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: arn:aws:iam::262778473495:role/GitHubActionsEKSRole
+          aws-region: ${{ secrets.AWS_REGION }} 
+
+     
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: "1.15.5" 
+
+      
+      - name: Terraform Init
+        run: |
+          cd aws-eks-infra
+          terraform init
+
+      
+      - name: Terraform Apply
+        run: |
+          cd aws-eks-infra
+          terraform apply -auto-approve
