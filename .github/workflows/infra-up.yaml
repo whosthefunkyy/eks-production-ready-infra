@@ -1,9 +1,5 @@
-name: "Infrastructure UP"
-
-
 on:
-  workflow_dispatch:
-
+  workflow_dispatch: # Ваша кнопка запуска
 
 permissions:
   id-token: write
@@ -13,31 +9,32 @@ jobs:
   terraform-apply:
     runs-on: ubuntu-latest
     steps:
-      
-      - name: Checkout Code
+      - name: Checkout code
         uses: actions/checkout@v4
 
-     
       - name: Configure AWS Credentials
         uses: aws-actions/configure-aws-credentials@v4
         with:
           role-to-assume: arn:aws:iam::262778473495:role/GitHubActionsEKSRole
           aws-region: ${{ secrets.AWS_REGION }} 
 
-     
       - name: Setup Terraform
         uses: hashicorp/setup-terraform@v3
         with:
-          terraform_version: "1.15.5" 
+          terraform_version: "1.11.0" 
 
-      
       - name: Terraform Init
         run: |
           cd aws-eks-infra
           terraform init
 
-      
-      - name: Terraform Apply
+
+      - name: Terraform Apply (Создание кластера)
+        run: |
+          cd aws-eks-infra
+          terraform apply -target=module.vpc -target=module.eks -target=aws_iam_role.aws_load_balancer_controller -target=aws_iam_policy.aws_load_balancer_controller -target=aws_iam_role_policy_attachment.aws_load_balancer_controller -auto-approve
+
+      - name: Terraform Apply (Настройка Kubernetes и Helm)
         run: |
           cd aws-eks-infra
           terraform apply -auto-approve
