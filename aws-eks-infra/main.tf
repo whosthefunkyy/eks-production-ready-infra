@@ -161,20 +161,3 @@ resource "helm_release" "aws_load_balancer_controller" {
     value = "aws-load-balancer-controller"
   }
 }
-resource "aws_eks_access_entry" "github_actions" {
-  cluster_name  = module.eks.cluster_name
-  principal_arn = "arn:aws:iam::262778473495:role/GitHubActionsEKSRole"
-
-  type = "STANDARD"
-}
-
-resource "aws_eks_access_policy_association" "github_actions_admin" {
-  cluster_name  = module.eks.cluster_name
-  principal_arn = "arn:aws:iam::262778473495:role/GitHubActionsEKSRole"
-
-  policy_arn = "arn:aws:eks::aws:cluster-access-policy/AmazonEKSClusterAdminPolicy"
-
-  access_scope {
-    type = "cluster"
-  }
-}
