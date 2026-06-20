@@ -128,7 +128,7 @@ resource "kubernetes_service_account" "aws_load_balancer_controller" {
   depends_on = [
     module.eks,
     aws_eks_access_entry.github_actions,
-    aws_eks_access_policy_association.github_actions_admin
+    
   ] 
   
 }
@@ -141,10 +141,9 @@ resource "helm_release" "aws_load_balancer_controller" {
   
   depends_on = [
     module.eks,
-    kubernetes_service_account.aws_load_balancer_controller,
-    aws_eks_access_entry.github_actions,
-    aws_eks_access_policy_association.github_actions_admin
+    kubernetes_service_account.aws_load_balancer_controller
   ]
+
 
   set {
     name  = "clusterName"
