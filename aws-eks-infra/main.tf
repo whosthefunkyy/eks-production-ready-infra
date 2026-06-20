@@ -72,7 +72,7 @@ module "eks" {
 
 # POLICY FOR LB
 resource "aws_iam_policy" "aws_load_balancer_controller" {
-  name   = "AWSLoadBalancerControllerIAMPolicy"
+  name   = "AWSLoadBalancerControllerIAMPolicy-v3"
   policy = file("${path.module}/iam/aws-load-balancer-controller-policy.json")
 }
 

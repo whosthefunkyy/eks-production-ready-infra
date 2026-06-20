@@ -5,7 +5,7 @@ variable "aws_region" {
 
 variable "cluster_name" {
   type    = string
-  default = "terraform-eks-v2"
+  default = "terraform-eks-v3"
 }
 
 variable "vpc_name" {

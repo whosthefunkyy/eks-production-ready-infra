@@ -30,17 +30,6 @@ jobs:
           cd aws-eks-infra
           terraform init
 
-      - name: Terraform Import Existing Resources
-        run: |
-          cd aws-eks-infra
-          
-          terraform import aws_iam_policy.aws_load_balancer_controller arn:aws:iam::262778473495:policy/AWSLoadBalancerControllerIAMPolicy || true
-          
-          terraform import module.eks.aws_cloudwatch_log_group.this[0] /aws/eks/terraform-eks-v2/cluster || true
-          
-          
-          terraform import 'module.eks.module.kms.aws_kms_alias.this["cluster"]' alias/eks/terraform-eks-v2 || true
-
       - name: Terraform Apply
         run: |
           cd aws-eks-infra
