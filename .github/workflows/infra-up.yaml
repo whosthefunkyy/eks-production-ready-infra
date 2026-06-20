@@ -1,3 +1,4 @@
+name: "Infrastructure UP"
 on:
   workflow_dispatch: # Ваша кнопка запуска
 

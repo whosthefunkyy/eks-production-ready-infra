@@ -58,6 +58,21 @@ module "eks" {
       desired_size = 2
     }
   }
+access_entries = {
+    github_actions = {
+      principal_arn     = "arn:aws:iam::262778473495:role/GitHubActionsEKSRole"
+      type              = "STANDARD"
+      
+      policy_associations = {
+        admin = {
+          policy_arn = "arn:aws:eks::aws:cluster-access-policy/AmazonEKSClusterAdminPolicy"
+          access_scope = {
+            type = "cluster"
+          }
+        }
+      }
+    }
+  }
 
   cluster_addons = {
     coredns = {
