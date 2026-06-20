@@ -47,8 +47,10 @@ module "eks" {
   cluster_endpoint_public_access  = true
   cluster_endpoint_private_access = true
 
+  
   enable_cluster_creator_admin_permissions = true
 
+  
   eks_managed_node_groups = {
     main = {
       instance_types = ["t3.medium"]
@@ -56,21 +58,6 @@ module "eks" {
       min_size     = 1
       max_size     = 2
       desired_size = 2
-    }
-  }
-access_entries = {
-    github_actions = {
-      principal_arn     = "arn:aws:iam::262778473495:role/GitHubActionsEKSRole"
-      type              = "STANDARD"
-      
-      policy_associations = {
-        admin = {
-          policy_arn = "arn:aws:eks::aws:cluster-access-policy/AmazonEKSClusterAdminPolicy"
-          access_scope = {
-            type = "cluster"
-          }
-        }
-      }
     }
   }
 
@@ -88,6 +75,7 @@ access_entries = {
     }
   }
 }
+
 ### Policy
 # resource "aws_iam_policy" "aws_load_balancer_controller" {
 #   name = "AWSLoadBalancerControllerIAMPolicy"
