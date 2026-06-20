@@ -1,0 +1,62 @@
+apiVersion: apps/v1
+kind: Deployment
+
+metadata:
+  name: {{ include "go-api.name" . }}
+  namespace: {{ .Values.namespace  }}
+  labels: 
+    {{- include "go-api.labels" . | nindent 4 }}
+
+spec:
+  {{- if not .Values.autoscaling.enabled }}
+  replicas: {{ .Values.replicaCount }}
+  {{- end }}
+
+  selector:
+    matchLabels:
+      app: {{ include "go-api.name" . }}
+
+  template:
+    metadata:
+      labels:
+        app: {{ include "go-api.name" . }}
+    spec:
+      serviceAccountName: {{ .Values.serviceAccount.name }}
+      containers:
+      - name: api-container
+        image: {{ .Values.image.repository }}:{{ .Values.image.tag }}
+        imagePullPolicy: Always
+        ports:
+        - containerPort: 8080       
+        
+        envFrom:
+        - configMapRef:
+            name: go-api-config
+
+        - secretRef:
+            name: go-api-secret
+
+        livenessProbe:
+          httpGet:
+            path: /health
+            port: 8080
+
+          initialDelaySeconds: 5
+          periodSeconds: 10
+
+        readinessProbe:
+          httpGet:
+            path: /health
+            port: 8080
+
+          initialDelaySeconds: 3
+          periodSeconds: 5
+
+        resources:
+          requests:
+            memory: {{ .Values.resources.requests.memory }}
+            cpu:    {{ .Values.resources.requests.cpu }}
+            
+          limits:
+            memory: {{ .Values.resources.limits.memory }}
+            cpu:    {{ .Values.resources.limits.cpu }}

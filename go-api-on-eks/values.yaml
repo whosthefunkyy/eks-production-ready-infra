@@ -1,0 +1,42 @@
+replicaCount: 1
+
+autoscaling:
+  enabled: true
+  minReplicas: 2
+  maxReplicas: 5
+  targetCPU: 70
+
+resources:
+  requests:
+   memory: "64Mi"
+   cpu: "100m"
+  limits:
+    memory: "128Mi"
+    cpu: "200m"
+
+image:
+  repository: 262778473495.dkr.ecr.us-east-1.amazonaws.com/go-api-image 
+  tag: latest
+  
+namespace: go-api-ns
+
+service:
+  type: ClusterIP
+  port: 8080  
+
+serviceMonitor:
+  enabled: false
+  interval: 15s
+  path: /metrics
+
+serviceAccount:
+  create: true
+  name: go-api-sa
+
+appConfig:
+  APP_ENV: production
+  APP_PORT: "8080"
+
+rbac:
+  create: false
+

@@ -1,0 +1,23 @@
+# {{- if .Values.serviceMonitor.enabled }}
+# apiVersion: monitoring.coreos.com/v1
+# kind: ServiceMonitor
+# metadata:
+#   name: go-api-servicemonitor
+#   namespace: monitoring
+#   labels:
+#     release: kube-prometheus-stack
+# spec:
+#   selector:
+#     matchLabels:
+#       app: go-api
+
+#   namespaceSelector:
+#     matchNames:
+#       - go-api-ns
+
+#   endpoints:
+#     - port: http
+#       path: {{ .Values.serviceMonitor.path }}
+#       interval: {{ .Values.serviceMonitor.interval }}
+# {{- end }}
+
