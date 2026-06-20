@@ -1,10 +1,10 @@
 name: "Infrastructure DOWN"
 
 on:
-  workflow_dispatch: # Включает кнопку ручного запуска в UI GitHub
+  workflow_dispatch:
 
 permissions:
-  id-token: write # Обязательно для генерации токена AWS OIDC
+  id-token: write
   contents: read
 
 jobs:
@@ -18,19 +18,15 @@ jobs:
         uses: aws-actions/configure-aws-credentials@v4
         with:
           role-to-assume: arn:aws:iam::262778473495:role/GitHubActionsEKSRole
-          aws-region: ${{ secrets.AWS_REGION }} 
+          aws-region: ${{ secrets.AWS_REGION }}
 
       - name: Setup Terraform
         uses: hashicorp/setup-terraform@v3
         with:
-          terraform_version: "1.11.0" 
+          terraform_version: "1.11.0"
 
-      - name: Terraform Init
+      - name: Terraform Init & Destroy
         run: |
           cd aws-eks-infra
           terraform init
-
-      - name: Terraform Destroy
-        run: |
-          cd aws-eks-infra
-          terraform destroy -refresh=false -auto-approve
+          terraform destroy -auto-approve
