@@ -30,8 +30,7 @@ jobs:
           cd aws-eks-infra
           terraform init
 
-   
       - name: Terraform Destroy
         run: |
           cd aws-eks-infra
-          terraform destroy -auto-approve
+          terraform destroy -refresh=false -auto-approve
