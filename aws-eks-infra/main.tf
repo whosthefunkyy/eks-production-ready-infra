@@ -125,7 +125,12 @@ resource "kubernetes_service_account" "aws_load_balancer_controller" {
     "eks.amazonaws.com/role-arn" = aws_iam_role.aws_load_balancer_controller.arn
   }
  }
-  depends_on = [module.eks] 
+  depends_on = [
+    module.eks,
+    aws_eks_access_entry.github_actions,
+    aws_eks_access_policy_association.github_actions_admin
+  ] 
+  
 }
 
 resource "helm_release" "aws_load_balancer_controller" {
@@ -134,7 +139,12 @@ resource "helm_release" "aws_load_balancer_controller" {
   chart      = "aws-load-balancer-controller"
   namespace  = "kube-system"
   
-  depends_on = [module.eks]
+  depends_on = [
+    module.eks,
+    kubernetes_service_account.aws_load_balancer_controller,
+    aws_eks_access_entry.github_actions,
+    aws_eks_access_policy_association.github_actions_admin
+  ]
 
   set {
     name  = "clusterName"
