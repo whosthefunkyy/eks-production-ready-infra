@@ -2,6 +2,11 @@ name: "Infrastructure UP"
 
 on:
   workflow_dispatch:
+    inputs:
+      local_admin_principal_arn:
+        description: "Optional IAM user/role ARN for local kubectl admin access"
+        required: false
+        type: string
 
 permissions:
   id-token: write
@@ -15,6 +20,7 @@ env:
   AWS_REGION: us-east-1
   TF_WORKING_DIR: aws-eks-infra
   TF_VERSION: "1.11.0"
+  TF_VAR_local_admin_principal_arn: ${{ inputs.local_admin_principal_arn }}
 
 jobs:
   terraform-apply:

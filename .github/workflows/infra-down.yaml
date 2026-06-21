@@ -20,6 +20,9 @@ env:
   AWS_REGION: us-east-1
   TF_WORKING_DIR: aws-eks-infra
   TF_VERSION: "1.11.0"
+  EKS_CLUSTER_NAME: terraform-eks-v3
+  HELM_RELEASE: go-api
+  HELM_NAMESPACE: go-api-ns
 
 jobs:
   terraform-destroy:
@@ -34,6 +37,24 @@ jobs:
         with:
           role-to-assume: arn:aws:iam::262778473495:role/GitHubActionsEKSRole
           aws-region: ${{ env.AWS_REGION }}
+
+      - name: Setup Helm
+        uses: azure/setup-helm@v4
+
+      - name: Setup Kubectl
+        uses: azure/setup-kubectl@v4
+
+      - name: Cleanup Application Resources
+        run: |
+          if aws eks describe-cluster --name "$EKS_CLUSTER_NAME" --region "$AWS_REGION" >/dev/null 2>&1; then
+            aws eks update-kubeconfig --name "$EKS_CLUSTER_NAME" --region "$AWS_REGION"
+            helm uninstall "$HELM_RELEASE" --namespace "$HELM_NAMESPACE" --wait --timeout 10m || true
+            kubectl delete ingress --all --all-namespaces --ignore-not-found=true
+            kubectl wait --for=delete ingress --all --all-namespaces --timeout=10m || true
+            sleep 120
+          else
+            echo "EKS cluster $EKS_CLUSTER_NAME does not exist, skipping Kubernetes cleanup."
+          fi
 
       - name: Setup Terraform
         uses: hashicorp/setup-terraform@v3

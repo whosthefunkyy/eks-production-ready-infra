@@ -30,3 +30,9 @@ variable "ecr_repository_name" {
   type    = string
   default = "go-api-image"
 }
+
+variable "local_admin_principal_arn" {
+  description = "Optional IAM user or role ARN that should get admin access to the EKS cluster for local kubectl usage."
+  type        = string
+  default     = ""
+}

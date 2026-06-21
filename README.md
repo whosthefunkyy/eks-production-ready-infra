@@ -27,6 +27,24 @@ go-api-on-eks/        # Go application, Dockerfile, and Helm chart.
 
 The destroy workflow only targets `aws-eks-infra`, so the bootstrap IAM role and GitHub OIDC provider stay in place for future runs.
 
+## Local kubectl access
+
+The EKS cluster always grants admin access to the GitHub Actions role. For local learning and troubleshooting, pass your own IAM principal ARN when running `Infrastructure UP`.
+
+Find your current AWS principal:
+
+```bash
+aws sts get-caller-identity
+```
+
+Use the returned `Arn` value as the `local_admin_principal_arn` workflow input. After the cluster is created, configure kubeconfig locally:
+
+```bash
+aws eks update-kubeconfig --name terraform-eks-v3 --region us-east-1
+kubectl get nodes
+kubectl get pods -A
+```
+
 ## Required GitHub/AWS assumptions
 
 - AWS account: `262778473495`
