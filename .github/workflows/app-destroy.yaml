@@ -1,0 +1,49 @@
+name: "Application Destroy"
+
+on:
+  workflow_dispatch:
+    inputs:
+      confirm_destroy:
+        description: "Type destroy to remove the Helm application"
+        required: true
+        type: string
+
+permissions:
+  id-token: write
+  contents: read
+
+env:
+  AWS_REGION: us-east-1
+  AWS_ROLE_ARN: arn:aws:iam::262778473495:role/GitHubActionsEKSRole
+  EKS_CLUSTER_NAME: terraform-eks-v3
+  HELM_RELEASE: go-api
+  HELM_NAMESPACE: go-api-ns
+
+jobs:
+  app-destroy:
+    if: ${{ github.event.inputs.confirm_destroy == 'destroy' }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ env.AWS_ROLE_ARN }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Setup Helm
+        uses: azure/setup-helm@v4
+
+      - name: Setup Kubectl
+        uses: azure/setup-kubectl@v4
+
+      - name: Update Kubeconfig
+        run: aws eks update-kubeconfig --name "$EKS_CLUSTER_NAME" --region "$AWS_REGION"
+
+      - name: Destroy Helm Application
+        run: |
+          helm uninstall "$HELM_RELEASE" --namespace "$HELM_NAMESPACE" --wait --timeout 10m || true
+          kubectl delete ingress --all --all-namespaces --ignore-not-found=true
+          kubectl wait --for=delete ingress --all --all-namespaces --timeout=10m || true
+
+      - name: Wait for AWS Load Balancer Cleanup
+        run: sleep 180
