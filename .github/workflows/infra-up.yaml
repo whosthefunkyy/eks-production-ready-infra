@@ -7,6 +7,15 @@ permissions:
   id-token: write
   contents: read
 
+concurrency:
+  group: terraform-infra
+  cancel-in-progress: false
+
+env:
+  AWS_REGION: us-east-1
+  TF_WORKING_DIR: aws-eks-infra
+  TF_VERSION: "1.11.0"
+
 jobs:
   terraform-apply:
     runs-on: ubuntu-latest
@@ -18,19 +27,21 @@ jobs:
         uses: aws-actions/configure-aws-credentials@v4
         with:
           role-to-assume: arn:aws:iam::262778473495:role/GitHubActionsEKSRole
-          aws-region: ${{ secrets.AWS_REGION }} 
+          aws-region: ${{ env.AWS_REGION }}
 
       - name: Setup Terraform
         uses: hashicorp/setup-terraform@v3
         with:
-          terraform_version: "1.11.0"
+          terraform_version: ${{ env.TF_VERSION }}
 
       - name: Terraform Init
-        run: |
-          cd aws-eks-infra
-          terraform init
+        working-directory: ${{ env.TF_WORKING_DIR }}
+        run: terraform init
+
+      - name: Terraform Plan
+        working-directory: ${{ env.TF_WORKING_DIR }}
+        run: terraform plan -out=tfplan
 
       - name: Terraform Apply
-        run: |
-          cd aws-eks-infra
-          terraform apply -auto-approve
+        working-directory: ${{ env.TF_WORKING_DIR }}
+        run: terraform apply -auto-approve tfplan

@@ -20,3 +20,13 @@ variable "cluster_version" {
   type    = string
   default = "1.31"
 }
+
+variable "github_actions_role_arn" {
+  type    = string
+  default = "arn:aws:iam::262778473495:role/GitHubActionsEKSRole"
+}
+
+variable "ecr_repository_name" {
+  type    = string
+  default = "go-api-image"
+}

@@ -1,0 +1,67 @@
+name: "Application Deploy"
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - main
+    paths:
+      - "go-api-on-eks/**"
+      - ".github/workflows/app-deploy.yaml"
+
+permissions:
+  id-token: write
+  contents: read
+
+env:
+  AWS_REGION: us-east-1
+  AWS_ROLE_ARN: arn:aws:iam::262778473495:role/GitHubActionsEKSRole
+  ECR_REPOSITORY: go-api-image
+  EKS_CLUSTER_NAME: terraform-eks-v3
+  HELM_RELEASE: go-api
+  HELM_NAMESPACE: go-api-ns
+  CHART_DIR: go-api-on-eks
+  APP_DIR: go-api-on-eks/app
+
+jobs:
+  build-push-deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ env.AWS_ROLE_ARN }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Login to Amazon ECR
+        id: ecr-login
+        uses: aws-actions/amazon-ecr-login@v2
+
+      - name: Build and Push Image
+        env:
+          IMAGE_URI: ${{ steps.ecr-login.outputs.registry }}/${{ env.ECR_REPOSITORY }}
+          IMAGE_TAG: ${{ github.sha }}
+        run: |
+          docker build -t "$IMAGE_URI:$IMAGE_TAG" -t "$IMAGE_URI:latest" "$APP_DIR"
+          docker push "$IMAGE_URI:$IMAGE_TAG"
+          docker push "$IMAGE_URI:latest"
+
+      - name: Setup Helm
+        uses: azure/setup-helm@v4
+
+      - name: Update Kubeconfig
+        run: aws eks update-kubeconfig --name "$EKS_CLUSTER_NAME" --region "$AWS_REGION"
+
+      - name: Deploy Helm Chart
+        env:
+          IMAGE_URI: ${{ steps.ecr-login.outputs.registry }}/${{ env.ECR_REPOSITORY }}
+          IMAGE_TAG: ${{ github.sha }}
+        run: |
+          helm upgrade --install "$HELM_RELEASE" "$CHART_DIR" \
+            --namespace "$HELM_NAMESPACE" \
+            --create-namespace \
+            --set image.repository="$IMAGE_URI" \
+            --set image.tag="$IMAGE_TAG"

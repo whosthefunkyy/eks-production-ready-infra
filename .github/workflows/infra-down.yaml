@@ -2,13 +2,28 @@ name: "Infrastructure DOWN"
 
 on:
   workflow_dispatch:
+    inputs:
+      confirm_destroy:
+        description: "Type destroy to remove the EKS infrastructure"
+        required: true
+        type: string
 
 permissions:
   id-token: write
   contents: read
 
+concurrency:
+  group: terraform-infra
+  cancel-in-progress: false
+
+env:
+  AWS_REGION: us-east-1
+  TF_WORKING_DIR: aws-eks-infra
+  TF_VERSION: "1.11.0"
+
 jobs:
   terraform-destroy:
+    if: ${{ github.event.inputs.confirm_destroy == 'destroy' }}
     runs-on: ubuntu-latest
     steps:
       - name: Checkout Code
@@ -18,15 +33,21 @@ jobs:
         uses: aws-actions/configure-aws-credentials@v4
         with:
           role-to-assume: arn:aws:iam::262778473495:role/GitHubActionsEKSRole
-          aws-region: ${{ secrets.AWS_REGION }}
+          aws-region: ${{ env.AWS_REGION }}
 
       - name: Setup Terraform
         uses: hashicorp/setup-terraform@v3
         with:
-          terraform_version: "1.11.0"
+          terraform_version: ${{ env.TF_VERSION }}
 
-      - name: Terraform Init & Destroy
-        run: |
-          cd aws-eks-infra
-          terraform init
-          terraform destroy -auto-approve
+      - name: Terraform Init
+        working-directory: ${{ env.TF_WORKING_DIR }}
+        run: terraform init
+
+      - name: Terraform Destroy Plan
+        working-directory: ${{ env.TF_WORKING_DIR }}
+        run: terraform plan -destroy -out=tfdestroy
+
+      - name: Terraform Destroy
+        working-directory: ${{ env.TF_WORKING_DIR }}
+        run: terraform apply -auto-approve tfdestroy

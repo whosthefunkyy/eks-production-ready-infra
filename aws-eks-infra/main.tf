@@ -7,12 +7,12 @@ module "vpc" {
   azs             = ["us-east-1a", "us-east-1b"]
   public_subnets  = ["10.0.1.0/24", "10.0.2.0/24"]
   private_subnets = ["10.0.11.0/24", "10.0.12.0/24"]
-  
+
   enable_nat_gateway = true
   single_nat_gateway = true
 
   tags = { Project = "terraform-eks" }
-  
+
   public_subnet_tags = {
     "kubernetes.io/role/elb"                    = "1"
     "kubernetes.io/cluster/${var.cluster_name}" = "shared"
@@ -25,29 +25,29 @@ module "vpc" {
 
 module "eks" {
   source  = "terraform-aws-modules/eks/aws"
-  version = "20.31.0" 
+  version = "20.31.0"
 
-  cluster_name    = var.cluster_name    
+  cluster_name    = var.cluster_name
   cluster_version = var.cluster_version
 
   vpc_id     = module.vpc.vpc_id
   subnet_ids = module.vpc.private_subnets
- 
+
   cluster_endpoint_public_access  = true
   cluster_endpoint_private_access = true
 
-  
+
   enable_cluster_creator_admin_permissions = false
 
 
   access_entries = {
     github_actions = {
-      principal_arn = "arn:aws:iam::262778473495:role/GitHubActionsEKSRole"
+      principal_arn = var.github_actions_role_arn
       type          = "STANDARD"
-      
+
       policy_associations = {
         admin = {
-          policy_arn = "arn:aws:eks::aws:cluster-access-policy/AmazonEKSClusterAdminPolicy"
+          policy_arn   = "arn:aws:eks::aws:cluster-access-policy/AmazonEKSClusterAdminPolicy"
           access_scope = { type = "cluster" }
         }
       }
@@ -57,9 +57,9 @@ module "eks" {
   eks_managed_node_groups = {
     main = {
       instance_types = ["t3.medium"]
-      min_size     = 1
-      max_size     = 2
-      desired_size = 2
+      min_size       = 1
+      max_size       = 2
+      desired_size   = 2
     }
   }
 
@@ -67,6 +67,15 @@ module "eks" {
     coredns    = { most_recent = true }
     kube-proxy = { most_recent = true }
     vpc-cni    = { most_recent = true }
+  }
+}
+
+resource "aws_ecr_repository" "go_api" {
+  name         = var.ecr_repository_name
+  force_delete = true
+
+  image_scanning_configuration {
+    scan_on_push = true
   }
 }
 
@@ -90,7 +99,7 @@ resource "aws_iam_role" "aws_load_balancer_controller" {
         Condition = {
           StringEquals = {
             "${module.eks.oidc_provider}:sub" = "system:serviceaccount:kube-system:aws-load-balancer-controller"
-            "${module.eks.oidc_provider}:aud" = "://amazonaws.com"
+            "${module.eks.oidc_provider}:aud" = "sts.amazonaws.com"
           }
         }
       }
@@ -109,7 +118,7 @@ resource "kubernetes_service_account" "aws_load_balancer_controller" {
     name      = "aws-load-balancer-controller"
     namespace = "kube-system"
     annotations = {
-      "://amazonaws.com" = aws_iam_role.aws_load_balancer_controller.arn
+      "eks.amazonaws.com/role-arn" = aws_iam_role.aws_load_balancer_controller.arn
     }
   }
   depends_on = [module.eks]
@@ -118,10 +127,10 @@ resource "kubernetes_service_account" "aws_load_balancer_controller" {
 # HELM RELEASE 
 resource "helm_release" "aws_load_balancer_controller" {
   name       = "aws-load-balancer-controller"
-  repository = "https://github.io"
+  repository = "https://aws.github.io/eks-charts"
   chart      = "aws-load-balancer-controller"
   namespace  = "kube-system"
-  
+
   depends_on = [
     module.eks,
     kubernetes_service_account.aws_load_balancer_controller
