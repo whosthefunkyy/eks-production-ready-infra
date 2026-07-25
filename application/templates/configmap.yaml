@@ -9,3 +9,7 @@ metadata:
 data:
   APP_ENV: "{{ .Values.appConfig.APP_ENV }}"
   APP_PORT: "{{ .Values.appConfig.APP_PORT }}"
+  DB_HOST: "{{ .Values.database.host }}"
+  DB_PORT: "{{ .Values.database.port }}"
+  DB_NAME: "{{ .Values.database.name }}"
+  DB_USER: "{{ .Values.database.user }}"

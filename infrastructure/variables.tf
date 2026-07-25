@@ -36,3 +36,23 @@ variable "local_admin_principal_arn" {
   type        = string
   default     = ""
 }
+
+variable "db_identifier" {
+  type    = string
+  default = "go-api-postgres"
+}
+
+variable "db_name" {
+  type    = string
+  default = "goapidb"
+}
+
+variable "db_username" {
+  type    = string
+  default = "goapi"
+}
+
+variable "db_instance_class" {
+  type    = string
+  default = "db.t3.micro"
+}

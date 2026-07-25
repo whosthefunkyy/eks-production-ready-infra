@@ -6,7 +6,7 @@ on:
     branches:
       - main
     paths:
-      - "go-api-on-eks/**"
+      - "application/**"
       - ".github/workflows/app-deploy.yaml"
 
 permissions:
@@ -18,10 +18,11 @@ env:
   AWS_ROLE_ARN: arn:aws:iam::262778473495:role/GitHubActionsEKSRole
   ECR_REPOSITORY: go-api-image
   EKS_CLUSTER_NAME: terraform-eks-v3
+  DB_IDENTIFIER: go-api-postgres
   HELM_RELEASE: go-api
   HELM_NAMESPACE: go-api-ns
-  CHART_DIR: go-api-on-eks
-  APP_DIR: go-api-on-eks/app
+  CHART_DIR: application
+  APP_DIR: application/app
 
 jobs:
   build-push-deploy:
@@ -55,6 +56,27 @@ jobs:
       - name: Update Kubeconfig
         run: aws eks update-kubeconfig --name "$EKS_CLUSTER_NAME" --region "$AWS_REGION"
 
+      - name: Load Database Connection Settings
+        run: |
+          DB_INFO="$(aws rds describe-db-instances \
+            --db-instance-identifier "$DB_IDENTIFIER" \
+            --query 'DBInstances[0].{host:Endpoint.Address,port:Endpoint.Port,name:DBName,user:MasterUsername,secret:MasterUserSecret.SecretArn}' \
+            --output json)"
+
+          DB_SECRET_ARN="$(echo "$DB_INFO" | jq -r '.secret')"
+          DB_SECRET="$(aws secretsmanager get-secret-value \
+            --secret-id "$DB_SECRET_ARN" \
+            --query SecretString \
+            --output text)"
+
+          {
+            echo "DB_HOST=$(echo "$DB_INFO" | jq -r '.host')"
+            echo "DB_PORT=$(echo "$DB_INFO" | jq -r '.port')"
+            echo "DB_NAME=$(echo "$DB_INFO" | jq -r '.name')"
+            echo "DB_USER=$(echo "$DB_INFO" | jq -r '.user')"
+            echo "DB_PASSWORD=$(echo "$DB_SECRET" | jq -r '.password')"
+          } >> "$GITHUB_ENV"
+
       - name: Deploy Helm Chart
         env:
           IMAGE_URI: ${{ steps.ecr-login.outputs.registry }}/${{ env.ECR_REPOSITORY }}
@@ -64,4 +86,9 @@ jobs:
             --namespace "$HELM_NAMESPACE" \
             --create-namespace \
             --set image.repository="$IMAGE_URI" \
-            --set image.tag="$IMAGE_TAG"
+            --set image.tag="$IMAGE_TAG" \
+            --set database.host="$DB_HOST" \
+            --set database.port="$DB_PORT" \
+            --set database.name="$DB_NAME" \
+            --set database.user="$DB_USER" \
+            --set-literal secret.dbPassword="$DB_PASSWORD"
