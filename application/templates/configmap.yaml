@@ -13,3 +13,4 @@ data:
   DB_PORT: "{{ .Values.database.port }}"
   DB_NAME: "{{ .Values.database.name }}"
   DB_USER: "{{ .Values.database.user }}"
+  DB_SSLMODE: "{{ .Values.database.sslMode }}"

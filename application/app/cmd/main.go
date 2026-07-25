@@ -27,14 +27,16 @@ func databaseDSN() string {
 	name := os.Getenv("DB_NAME")
 	user := os.Getenv("DB_USER")
 	password := os.Getenv("DB_PASSWORD")
+	sslMode := envOrDefault("DB_SSLMODE", "require")
 
 	return fmt.Sprintf(
-		"host=%s port=%s dbname=%s user=%s password=%s sslmode=disable",
+		"host=%s port=%s dbname=%s user=%s password=%s sslmode=%s",
 		host,
 		port,
 		name,
 		user,
 		password,
+		sslMode,
 	)
 }
 

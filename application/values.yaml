@@ -42,6 +42,7 @@ database:
   port: "5432"
   name: goapidb
   user: goapi
+  sslMode: require
 
 secret:
   dbPassword: ""
