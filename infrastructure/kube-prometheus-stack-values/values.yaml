@@ -1,27 +1,31 @@
-# Tuned for 2x t3.medium EKS nodes (pet-project). Revisit if pods stay Pending.
-
 alertmanager:
   enabled: false
 
 grafana:
   enabled: true
   defaultDashboardsEnabled: true
-  
+
   admin:
     existingSecret: kube-prometheus-stack-grafana
     userKey: admin-user
     passwordKey: admin-password
-  
+
+  env:
+    GF_SERVER_ROOT_URL: "%(protocol)s://%(domain)s/grafana"
+    GF_SERVER_SERVE_FROM_SUB_PATH: "true"
+
   ingress:
     enabled: true
     ingressClassName: alb
     annotations:
       alb.ingress.kubernetes.io/scheme: internet-facing
       alb.ingress.kubernetes.io/target-type: ip
-      alb.ingress.kubernetes.io/group.name: main  
+      alb.ingress.kubernetes.io/group.name: main
     hosts:
       - ""
-  
+    path: /grafana
+    pathType: Prefix
+
   resources:
     requests:
       cpu: 100m
