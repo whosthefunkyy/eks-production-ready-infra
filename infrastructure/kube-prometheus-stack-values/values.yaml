@@ -6,6 +6,22 @@ alertmanager:
 grafana:
   enabled: true
   defaultDashboardsEnabled: true
+  
+  admin:
+    existingSecret: kube-prometheus-stack-grafana
+    userKey: admin-user
+    passwordKey: admin-password
+  
+  ingress:
+    enabled: true
+    ingressClassName: alb
+    annotations:
+      alb.ingress.kubernetes.io/scheme: internet-facing
+      alb.ingress.kubernetes.io/target-type: ip
+      alb.ingress.kubernetes.io/group.name: main  
+    hosts:
+      - ""
+  
   resources:
     requests:
       cpu: 100m
