@@ -22,3 +22,11 @@ output "go_api_db_master_user_secret_arn" {
   value     = aws_db_instance.go_api.master_user_secret[0].secret_arn
   sensitive = true
 }
+
+output "monitoring_namespace" {
+  value = helm_release.kube_prometheus_stack.namespace
+}
+
+output "grafana_service_name" {
+  value = "${helm_release.kube_prometheus_stack.name}-grafana"
+}
