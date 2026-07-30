@@ -18,6 +18,7 @@ grafana:
       alb.ingress.kubernetes.io/scheme: internet-facing
       alb.ingress.kubernetes.io/target-type: ip
       alb.ingress.kubernetes.io/group.name: main
+      alb.ingress.kubernetes.io/group.order: "1"
     hosts:
       - ""
     path: /grafana
