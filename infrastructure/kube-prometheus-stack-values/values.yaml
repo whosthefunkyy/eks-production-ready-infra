@@ -5,10 +5,7 @@ grafana:
   enabled: true
   defaultDashboardsEnabled: true
 
-  admin:
-    existingSecret: kube-prometheus-stack-grafana
-    userKey: admin-user
-    passwordKey: admin-password
+  adminPassword: "StrongPassword123!"  
 
   env:
     GF_SERVER_ROOT_URL: "%(protocol)s://%(domain)s/grafana"
