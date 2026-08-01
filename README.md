@@ -187,6 +187,11 @@ The Go application exposes custom Prometheus metrics including:
 
 Grafana is published through the existing AWS ALB using a dedicated `/grafana` path.
 
+<img width="1618" height="1072" alt="Снимок экрана 2026-08-01 в 15 20 38" src="https://github.com/user-attachments/assets/d6cab7e0-cedc-4838-a03c-91f66c8de61e" />
+
+<img width="1616" height="897" alt="Снимок экрана 2026-08-01 в 15 21 20" src="https://github.com/user-attachments/assets/9b94152d-31e6-4e73-8e22-66f44603a819" />
+
+
 ---
 
 ## Troubleshooting Experience
